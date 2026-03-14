@@ -376,7 +376,8 @@ class Book:
                 [x.decompose() for x in entry_content.find_all('div', attrs={'class': 'wp-block-spacer'})]
                 if hr := entry_content.find('hr'):
                     hr.decompose()
-                entry_content.find('script').decompose()
+                if script := entry_content.find('script'):
+                    script.decompose()
                 if style := entry_content.find('style'):
                     style.decompose()
 
