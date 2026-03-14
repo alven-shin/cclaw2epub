@@ -79,6 +79,31 @@ class Book:
                    text-align: center;
                 }
 
+                div.image_page {
+                   display: table;
+                   width: 100%;
+                   height: 100%;
+                   margin: 0;
+                   padding: 0;
+                   page-break-before: always;
+                   page-break-after: always;
+                }
+
+                div.image_page_cell {
+                   display: table-cell;
+                   text-align: center;
+                   vertical-align: middle;
+                }
+
+                img.image_page_img {
+                   display: inline-block;
+                   max-width: 100%;
+                   max-height: 100%;
+                   min-height: 1em;
+                   margin: 0;
+                   padding: 0;
+                }
+
                 h1, h2 {
                    text-align: center;
                    page-break-before: always;
@@ -383,18 +408,21 @@ class Book:
 
                 # Remap images
                 for image in entry_content.find_all('img'):
-                    img = image
-                    url = img.attrs['data-orig-file']
-                    width, height = img.attrs['data-orig-size'].split(',')
-
-                    image.replace_with(BeautifulSoup(inspect.cleandoc(f'''
-                        <div class="svg_outer svg_inner">
-                          <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="99%" width="100%" version="1.1" preserveAspectRatio="xMidYMid meet" viewBox="0 0 {width} {height}">
-                            <image xlink:href="../Images/{url.split("/")[-1]}" width="{width}" height="{height}" />
-                            <!-- {url} -->
-                          </svg>
+                    url = image.attrs['data-orig-file']
+                    wrapper = image.find_parent('div', class_='wp-block-image')
+                    replacement = BeautifulSoup(inspect.cleandoc(f'''
+                        <div class="image_page">
+                          <div class="image_page_cell">
+                            <img class="image_page_img" src="../Images/{url.split("/")[-1]}"/>
+                          </div>
+                          <!-- {url} -->
                         </div>
-                    '''), features='html.parser'))
+                    '''), features='html.parser').find('div')
+
+                    if wrapper:
+                        wrapper.replace_with(replacement)
+                    else:
+                        image.replace_with(replacement)
 
                 file.write(jinja2.Environment().from_string(inspect.cleandoc('''
                     <?xml version="1.0" encoding="utf-8"?>
